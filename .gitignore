@@ -21,3 +21,14 @@ venv/
 .idea/
 .DS_Store
 Thumbs.db
+# Terraform generated files
+**/tfplan
+**/*.tfplan
+**/terraform-plan.txt
+**/crash.*.log
+**/*.tfvars
+**/*.tfvars.json
+!**/*.tfvars.example
+
+# Track Terraform provider dependency versions
+!**/.terraform.lock.hcl
