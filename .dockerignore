@@ -1,0 +1,12 @@
+.git
+.github
+terraform
+helm
+jenkins
+argocd
+__pycache__
+*.pyc
+*.pem
+.terraform
+*.tfstate
+*.tfstate.*
