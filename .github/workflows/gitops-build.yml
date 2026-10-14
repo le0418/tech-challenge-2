@@ -23,6 +23,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Diagnose GitHub OIDC context
+        env:
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_REF: ${{ github.ref }}
+          GH_EVENT: ${{ github.event_name }}
+        run: |
+          echo "Repository: $GH_REPOSITORY"
+          echo "Ref: $GH_REF"
+          echo "Event: $GH_EVENT"
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
