@@ -46,3 +46,7 @@ Thumbs.db
 
 # Evidence awaiting review
 /evidence/00-pending-review/
+
+# Cluster Autoscaler generated artifacts
+/cluster-autoscaler/*.tgz
+/cluster-autoscaler/rendered.yaml

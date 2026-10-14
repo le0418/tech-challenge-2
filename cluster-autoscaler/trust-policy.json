@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowClusterAutoscalerServiceAccount",
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::900160666800:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/771D790BA8A974B41E7E7176AC527618"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.us-east-1.amazonaws.com/id/771D790BA8A974B41E7E7176AC527618:aud": "sts.amazonaws.com",
+          "oidc.eks.us-east-1.amazonaws.com/id/771D790BA8A974B41E7E7176AC527618:sub": "system:serviceaccount:kube-system:cluster-autoscaler"
+        }
+      }
+    }
+  ]
+}

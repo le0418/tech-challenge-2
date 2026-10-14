@@ -1,0 +1,32 @@
+cloudProvider: aws
+
+awsRegion: us-east-1
+
+autoDiscovery:
+  clusterName: tech-challenge-2-eks
+
+image:
+  repository: registry.k8s.io/autoscaling/cluster-autoscaler
+  tag: v1.34.2
+  pullPolicy: IfNotPresent
+
+rbac:
+  create: true
+  serviceAccount:
+    create: false
+    name: cluster-autoscaler
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 100Mi
+  limits:
+    cpu: 200m
+    memory: 300Mi
+
+extraArgs:
+  balance-similar-node-groups: "true"
+  skip-nodes-with-system-pods: "true"
+  skip-nodes-with-local-storage: "true"
