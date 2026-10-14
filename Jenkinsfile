@@ -99,16 +99,16 @@ pipeline {
 
                         helm upgrade "$HELM_RELEASE" ./flask-chart \
                             --namespace "$K8S_NAMESPACE" \
-                            --reuse-values \
+                            --values ./flask-chart/values.yaml \
                             --set-string image.repository="$ECR_REGISTRY/$ECR_REPOSITORY" \
                             --set-string image.tag="$IMAGE_TAG" \
                             --wait \
-                            --timeout 10m
+                            --timeout 15m
 
                         kubectl rollout status \
                             deployment/flask-app-flask-chart \
                             --namespace "$K8S_NAMESPACE" \
-                            --timeout=300s
+                            --timeout=600s
 
                         kubectl get deployment flask-app-flask-chart \
                             --namespace "$K8S_NAMESPACE"
