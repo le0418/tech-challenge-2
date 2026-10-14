@@ -306,8 +306,117 @@ Potential production improvements include:
 - Reconciling Terraform drift and documenting ownership of controller-managed resources.
 - Implementing stronger deployment controls and least-privilege access.
 
+## GitOps Deployment with GitHub Actions and Argo CD
+
+In addition to the Jenkins CI/CD pipeline, this project implements an automated GitOps deployment workflow using GitHub Actions, Amazon ECR, Argo CD, and Amazon EKS.
+
+The GitOps deployment runs independently of the Jenkins-managed application.
+
+### GitOps Architecture
+
+The deployment follows this workflow:
+
+1. A developer pushes application or workflow changes to the `main` branch.
+2. GitHub Actions authenticates to AWS using OpenID Connect (OIDC).
+3. GitHub Actions builds the Flask Docker image and pushes it to Amazon ECR.
+4. GitHub Actions updates the image tag in `gitops/values.yaml`.
+5. The workflow commits and pushes the updated configuration to GitHub.
+6. Argo CD detects the desired-state change in the private repository.
+7. Argo CD automatically synchronizes the Flask deployment on Amazon EKS.
+
+This separates the image-building process from Kubernetes deployment reconciliation.
+
+### GitHub Actions Configuration
+
+The workflow is defined in:
+
+`.github/workflows/gitops-build.yml`
+
+Key features include:
+
+- AWS authentication through GitHub Actions OIDC and an IAM role.
+- Docker image builds using immutable Git commit-based tags.
+- Image publication to the private Amazon ECR repository.
+- Automated updates to the GitOps Helm values file.
+- Automated Git commits using the GitHub Actions token.
+- Workflow path filtering to prevent image-tag commits from triggering recursive builds.
+
+The GitHub Actions IAM role is:
+
+`TechChallenge2GitHubActionsECRRole`
+
+### Argo CD Configuration
+
+Argo CD is installed in the `argocd` namespace using Helm.
+
+The application manifest is located at:
+
+`gitops/argocd/flask-gitops-application.yaml`
+
+The application uses the private GitHub repository as its desired-state source.
+
+Repository authentication uses a read-only GitHub SSH deploy key stored as a Kubernetes Secret in the Argo CD namespace. Private key material is not committed to Git.
+
+The application uses:
+
+- Argo CD application: `flask-gitops`
+- Kubernetes namespace: `flask-gitops`
+- Helm release: `flask-gitops`
+- Helm chart: `flask-chart`
+- GitOps values file: `gitops/values.yaml`
+- Automated synchronization, pruning, and self-healing
+
+The separate namespace and Helm release prevent resource ownership conflicts with the Jenkins-managed deployment.
+
+The GitOps deployment does not create an additional public Application Load Balancer. Application access was verified using Kubernetes port forwarding.
+
+### Verified Automated Deployment
+
+A successful GitHub Actions run associated with commit `11001ef` built and pushed the following image to Amazon ECR:
+
+`900160666800.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2:gitops-11001ef67877bc5356cff5a558affb053794c733`
+
+The workflow successfully updated the GitOps image tag in GitHub.
+
+Argo CD detected the updated configuration and deployed the new image to Amazon EKS without Jenkins.
+
+Verification results:
+
+- Argo CD synchronization status: `Synced`
+- Argo CD application health: `Healthy`
+- Kubernetes deployment rollout: successful
+- Flask pod status: `Running`
+- Container readiness: `1/1`
+- Container restarts: `0`
+- Flask root endpoint: `Hello, World!`
+- Flask health endpoint: `status: healthy`
+
+The HTTP endpoint responses were verified during the initial GitOps deployment. The subsequent automated image update was verified through the deployed image tag, rollout status, pod readiness, and Argo CD health.
+
+### GitOps Evidence
+
+The following screenshots are stored in `evidence/12-gitops/`:
+
+- [GitHub Actions build success](evidence/12-gitops/github-actions-build-success.png)
+- [Amazon ECR image verification](evidence/12-gitops/github-actions-ecr-image.png)
+- [Argo CD repository connection](evidence/12-gitops/argocd-repository-connected.png)
+- [Argo CD synchronized and healthy](evidence/12-gitops/argocd-flask-synced-healthy.png)
+- [Automated GitOps workflow success](evidence/12-gitops/github-actions-auto-deploy-success.png)
+- [Automated Argo CD deployment](evidence/12-gitops/argocd-automated-deployment.png)
+
+### GitOps Production Considerations
+
+Potential production improvements include restricting GitHub workflow permissions at the job level, protecting the deployment branch, encrypting Kubernetes Secrets at rest, rotating deploy keys, implementing deployment approval policies, and pinning third-party GitHub Actions to reviewed commit SHAs.
+
 ## Project Outcome
 
-Successfully demonstrated an end-to-end deployment workflow combining AWS infrastructure provisioning, containerization, Kubernetes orchestration, Helm application management, Jenkins CI/CD automation, and Kubernetes autoscaling configuration.
+Successfully demonstrated an end-to-end AWS cloud-native deployment workflow combining Terraform infrastructure provisioning, Docker containerization, Amazon ECR, Amazon EKS, Helm, Jenkins CI/CD, GitHub Actions, Argo CD GitOps, and Kubernetes autoscaling.
 
-The Jenkins pipeline completed successfully and deployed a verified Flask application to Amazon EKS.
+Two independent deployment workflows were successfully implemented and verified:
+
+1. **Jenkins CI/CD:** Built, pushed, and deployed the Flask application to Amazon EKS using Helm.
+2. **GitHub Actions + Argo CD GitOps:** Built and pushed a new container image to Amazon ECR, automatically updated the desired image tag in GitHub, and synchronized the updated application deployment to Amazon EKS.
+
+Both deployment approaches were validated through Kubernetes rollout checks, application readiness, and successful pipeline execution.
+
+The project also demonstrates infrastructure as code, Kubernetes scheduling controls, autoscaling configuration, short-lived AWS authentication through GitHub OIDC, and Git-based automated deployment reconciliation.
