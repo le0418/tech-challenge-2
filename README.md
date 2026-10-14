@@ -169,12 +169,12 @@ The pipeline performs these stages:
 
 Jenkins job: `tech-challenge-2-cicd`
 
-Successful build: `#1`
+Successful build: `#2`
 
 Published image:
 
 ```text
-900160666800.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2:build-1
+900160666800.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2:build-2
 ```
 
 The ECR image was verified after the pipeline completed.
@@ -200,6 +200,54 @@ The HPA was observed with active CPU and memory metrics and two running replicas
 
 **Validation scope:** HPA configuration and metrics availability were verified. Scaling behavior under sustained load was not tested.
 
+
+## Cluster Autoscaler and Pod Scheduling
+
+The Amazon EKS managed node group uses t3.small EC2 instances with a minimum of 1 and a maximum of 4 worker nodes.
+
+Cluster Autoscaler is installed in the kube-system namespace using Helm and IAM Roles for Service Accounts (IRSA).
+
+### Verified Autoscaling Tests
+
+| Test | Observed result |
+|---|---|
+| Initial scale-up | 1 to 2 worker nodes |
+| Initial scale-down | 2 to 1 worker node |
+| Rolling deployment scale-up | 1 to 3 worker nodes |
+| Post-deployment scale-down | 3 to 2 worker nodes |
+| Flask availability | 2/2 replicas Ready |
+| Pod placement | Separate worker nodes |
+
+### Pod Anti-Affinity
+
+The Flask deployment uses required pod anti-affinity with the kubernetes.io/hostname topology key.
+
+This prevents Flask replicas from being scheduled on the same worker node.
+
+### Rolling Update Strategy
+
+The Helm chart configures:
+
+- maxSurge: 1
+- maxUnavailable: 0
+
+These settings allow a rolling update to retain existing replicas while replacement pods become available, provided the cluster has sufficient capacity.
+
+### Verified Jenkins Deployment
+
+Jenkins build #2 completed successfully.
+
+- ECR image: `900160666800.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2:build-2`
+- Helm release: `flask-app`
+- Helm revision: 12
+- Flask deployment: 2/2 Ready
+- Pod restarts: 0
+- Required pod anti-affinity: Verified
+- Application endpoint: HTTP 200, Hello, World!
+- Health endpoint: HTTP 200
+
+The Jenkins pipeline passes flask-chart/values.yaml to Helm to preserve the pod scheduling configuration.
+
 ## Deployment Verification
 
 The following checks were completed successfully:
@@ -207,7 +255,7 @@ The following checks were completed successfully:
 - Terraform formatting and configuration validation
 - Terraform infrastructure state inspection
 - Jenkins declarative pipeline syntax validation
-- Successful Jenkins build #1
+- Successful Jenkins build #2
 - Docker image publication to Amazon ECR
 - Helm application deployment
 - Kubernetes deployment rollout
