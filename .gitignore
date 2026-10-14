@@ -32,3 +32,17 @@ Thumbs.db
 
 # Track Terraform provider dependency versions
 !**/.terraform.lock.hcl
+
+# Local Jenkins data and credentials
+/jenkins/
+
+# Temporary archives and review exports
+*.zip
+*.pdf
+
+# Local working files
+/tatus --short
+/terraform/variables.tf.txt
+
+# Evidence awaiting review
+/evidence/00-pending-review/
