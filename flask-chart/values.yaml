@@ -161,4 +161,11 @@ nodeSelector: {}
 
 tolerations: []
 
-affinity: {}
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: flask-chart
+            app.kubernetes.io/instance: flask-app
+        topologyKey: kubernetes.io/hostname
