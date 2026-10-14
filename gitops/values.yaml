@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: 900160666800.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2
   pullPolicy: IfNotPresent
-  tag: "gitops-1880aa792ca52f1da9918c6ab3b9d266ec137621"
+  tag: "gitops-11001ef67877bc5356cff5a558affb053794c733"
 
 ingress:
   enabled: false
